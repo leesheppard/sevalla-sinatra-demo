@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Data Export Example</title>
+  <style>
+    body { font-family: Arial; margin: 40px; background: #f5f5f5; }
+    .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+    h1 { color: #333; }
+    h2 { color: #666; margin-top: 30px; }
+    .section { margin: 20px 0; padding: 15px; background: #f9f9f9; border-left: 4px solid #007bff; }
+    button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #0056b3; }
+    button:disabled { background: #ccc; cursor: not-allowed; }
+    .status { margin-top: 10px; padding: 10px; background: #e7f3ff; border-radius: 4px; display: none; }
+    .status.show { display: block; }
+    select { padding: 8px; margin: 5px 0; width: 100%; }
+    .files-list { margin-top: 20px; }
+    .file-item { padding: 10px; background: #fff; border: 1px solid #ddd; margin: 5px 0; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .file-item a { color: #007bff; text-decoration: none; }
+    .file-item a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>CSV Export Demo</h1>
+    
+    <div class="section">
+      <h2>Export Your Orders</h2>
+      <label for="user-select">Select a user:</label>
+      <select id="user-select" required>
+        <option value="">Choose a user...</option>
+        <% @users.each do |user| %>
+          <option value="<%= user.id %>"><%= user.name %> (<%= user.email %>)</option>
+        <% end %>
+      </select>
+      <button id="export-my-orders" disabled>Export My Orders</button>
+      <div id="my-orders-status" class="status"></div>
+    </div>
+    
+    <div class="section">
+      <h2>Export All Orders</h2>
+      <p>Generate a CSV with all orders in the system.</p>
+      <button id="export-all-orders">Export All Orders</button>
+      <div id="all-orders-status" class="status"></div>
+    </div>
+    
+    <div class="section">
+      <h2>Export All Users</h2>
+      <p>Generate a CSV with all user records.</p>
+      <button id="export-users">Export Users</button>
+      <div id="users-status" class="status"></div>
+    </div>
+
+    <div class="files-list">
+      <h2>Available Files</h2>
+      <p><em>Refresh the page to see newly completed exports.</em></p>
+      <div id="files-container"></div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('user-select').addEventListener('change', (e) => {
+      document.getElementById('export-my-orders').disabled = !e.target.value;
+    });
+
+    document.getElementById('export-my-orders').addEventListener('click', async () => {
+      const userId = document.getElementById('user-select').value;
+      const statusEl = document.getElementById('my-orders-status');
+      
+      const response = await fetch('/export/my-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId })
+      });
+      
+      const data = await response.json();
+      statusEl.textContent = data.status;
+      statusEl.classList.add('show');
+    });
+
+    document.getElementById('export-all-orders').addEventListener('click', async () => {
+      const statusEl = document.getElementById('all-orders-status');
+      
+      const response = await fetch('/export/all-orders', { method: 'POST' });
+      const data = await response.json();
+      statusEl.textContent = data.status;
+      statusEl.classList.add('show');
+    });
+
+    document.getElementById('export-users').addEventListener('click', async () => {
+      const statusEl = document.getElementById('users-status');
+      
+      const response = await fetch('/export/users', { method: 'POST' });
+      const data = await response.json();
+      statusEl.textContent = data.status;
+      statusEl.classList.add('show');
+    });
+
+    async function loadFiles() {
+      const response = await fetch('/exports');
+      const data = await response.json();
+      const container = document.getElementById('files-container');
+      
+      if (data.files.length === 0) {
+        container.innerHTML = '<p><em>No exports yet.</em></p>';
+        return;
+      }
+      
+      container.innerHTML = data.files.map(file => `
+        <div class="file-item">
+          <span>${file}</span>
+          <a href="/exports/${file}" download>Download</a>
+        </div>
+      `).join('');
+    }
+
+    loadFiles();
+    setInterval(loadFiles, 5000);
+  </script>
+</body>
+</html>
