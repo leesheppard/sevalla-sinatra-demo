@@ -33,6 +33,7 @@ GEM
     minitest (5.26.2)
     mustermann (3.0.4)
       ruby2_keywords (~> 0.0.1)
+    nio4r (2.7.5)
     pg (1.6.2)
     pg (1.6.2-aarch64-linux)
     pg (1.6.2-aarch64-linux-musl)
@@ -40,6 +41,8 @@ GEM
     pg (1.6.2-x86_64-darwin)
     pg (1.6.2-x86_64-linux)
     pg (1.6.2-x86_64-linux-musl)
+    puma (7.1.0)
+      nio4r (~> 2.0)
     rack (3.2.4)
     rack-protection (4.2.1)
       base64 (>= 0.1.0)
@@ -89,6 +92,7 @@ DEPENDENCIES
   activerecord
   csv
   pg
+  puma
   redis
   sidekiq
   sinatra
