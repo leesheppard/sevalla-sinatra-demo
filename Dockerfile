@@ -23,8 +23,11 @@ COPY . .
 # Create exports directory
 RUN mkdir -p exports
 
+# Make start script executable
+RUN chmod +x bin/start.sh
+
 # Expose port
 EXPOSE 3000
 
 # Default command
-CMD ["bundle", "exec", "puma", "-t", "5:5", "-p", "3000", "-e", "production"]
+CMD ["bin/start.sh"]
