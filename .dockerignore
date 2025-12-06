@@ -1,0 +1,12 @@
+.git
+.gitignore
+.env
+.DS_Store
+node_modules
+.bundle
+log/
+tmp/
+exports/
+.rspec
+coverage
+README.md
