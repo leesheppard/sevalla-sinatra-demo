@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: sinatra_exports_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: sh -c "bundle exec rackup --host 0.0.0.0 --port 9292"
+    ports:
+      - "9292:9292"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/sinatra_exports_dev
+      REDIS_URL: redis://redis:6379/1
+    volumes:
+      - ./exports:/app/exports
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  sidekiq:
+    build: .
+    command: sh -c "bundle exec sidekiq -r ./app.rb"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/sinatra_exports_dev
+      REDIS_URL: redis://redis:6379/1
+    volumes:
+      - ./exports:/app/exports
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
