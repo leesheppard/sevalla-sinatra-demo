@@ -5,7 +5,7 @@ if ENV['DATABASE_URL']
 else
   db_config = {
     adapter: 'postgresql',
-    database: 'sinatra_exports_dev',
+    database: ENV['DATABASE'] || 'sinatra_exports_dev',
     user: ENV['DATABASE_USER'] || '',
     password: ENV['DATABASE_PASSWORD'] || '',
     host: ENV['DATABASE_HOST'] || 'localhost',
