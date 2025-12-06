@@ -4,7 +4,7 @@ This is a simple example of how to use Sidekiq to export CSV files in the backgr
 
 ### Prerequisites
 
-- Ruby 3.2.2
+- Ruby 3.4.4
 - PostgreSQL 16
 - Sidekiq 6.5.7
 
@@ -59,3 +59,17 @@ bundle exec rackup
     └── (not used with PostgreSQL)
 ```
 
+## Docker
+
+### Build and start all services
+
+```bash
+docker-compose up --build
+```
+
+### Run database setup (first time only)
+
+```bash
+docker-compose exec web rake db:create
+docker-compose exec web rake seed
+```
