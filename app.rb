@@ -8,6 +8,15 @@ require_relative 'models/user'
 require_relative 'models/order'
 require_relative 'workers/export_worker'
 
+begin
+  ActiveRecord::Base.connection.execute("SELECT 1")
+  puts "[INFO] Database connection established successfully."
+rescue => e
+  puts "[ERROR] Cannot connect to the database!"
+  puts e.message
+  exit(1)
+end
+
 def redis_available?
   Sidekiq.redis { |conn| conn.ping == "PONG" }
 rescue StandardError => e
