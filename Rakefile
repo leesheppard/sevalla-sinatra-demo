@@ -1,4 +1,5 @@
-require "sinatra/activerecord/rake"
+require 'sinatra/activerecord/rake'
+require_relative './app'
 
 task :load_models do
   Dir["models/**/*.rb"].each { |f| require_relative f }
