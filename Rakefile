@@ -1,17 +1,10 @@
-require "active_record"
-require "activerecord-rake"
-require_relative "config/database"
+require "sinatra/activerecord/rake"
 
-namespace :db do
-  task :load_app do
-    Dir["models/**/*.rb"].each { |f| require_relative f }
-  end
+task :load_models do
+  Dir["models/**/*.rb"].each { |f| require_relative f }
 end
 
-Rake::Task["db:migrate"].enhance(["db:load_app"]) if Rake::Task.task_defined?("db:migrate")
-Rake::Task["db:seed"].enhance(["db:load_app"]) rescue nil
-
-task :seed do
+task :seed => :load_models do
   puts "Seeding database..."
 
   Order.delete_all
