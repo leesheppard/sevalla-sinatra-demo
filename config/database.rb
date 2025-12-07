@@ -1,17 +1,29 @@
 require 'active_record'
+require 'uri'
 
-if ENV['DATABASE_URL'] && !ENV['DATABASE_URL'].empty?
-  ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'])
-else
-  db_config = {
-    adapter: 'postgresql',
-    database: ENV['DATABASE'] || 'sinatra_exports_dev',
-    username: ENV['DATABASE_USER'] || 'postgres',
-    password: ENV['DATABASE_PASSWORD'] || nil,
-    host: ENV['DATABASE_HOST'] || 'localhost',
-    port: (ENV['DATABASE_PORT'] || 5432).to_i
-  }
-
-  ActiveRecord::Base.establish_connection(db_config)
-  puts "Connected to #{ActiveRecord::Base.connection_config[:database]} on #{ActiveRecord::Base.connection_config[:host]}"
+def database_config
+  if ENV['DATABASE_URL'] && !ENV['DATABASE_URL'].empty?
+    uri = URI.parse(ENV['DATABASE_URL'])
+    {
+      adapter:  'postgresql',
+      host:     uri.host,
+      port:     uri.port || 5432,
+      database: uri.path[1..-1],
+      username: uri.user,
+      password: uri.password,
+      encoding: 'utf8'
+    }
+  else
+    {
+      adapter:  'postgresql',
+      host:     ENV['DATABASE_HOST'] || 'localhost',
+      port:     ENV['DATABASE_PORT'] || 5432,
+      database: ENV['DATABASE'] || 'sinatra_exports_dev',
+      username: ENV['DATABASE_USER'] || 'postgres',
+      password: ENV['DATABASE_PASSWORD'] || '',
+      encoding: 'utf8'
+    }
+  end
 end
+
+ActiveRecord::Base.establish_connection(database_config)
