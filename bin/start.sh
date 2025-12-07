@@ -2,7 +2,7 @@
 set -e
 
 # Prepare database (create tables if needed)
-bundle exec rake db:prepare
+bundle exec rake db:migrate
 
 # Start Sidekiq worker in the background
 bundle exec sidekiq -r ./app.rb -c 5 -e ${RACK_ENV:-production} &
