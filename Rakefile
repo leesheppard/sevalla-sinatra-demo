@@ -1,6 +1,15 @@
-require_relative 'config/database'
-require_relative 'models/user'
-require_relative 'models/order'
+require "active_record"
+require "activerecord-rake"
+require_relative "config/database"
+
+namespace :db do
+  task :load_app do
+    Dir["models/**/*.rb"].each { |f| require_relative f }
+  end
+end
+
+Rake::Task["db:migrate"].enhance(["db:load_app"]) if Rake::Task.task_defined?("db:migrate")
+Rake::Task["db:seed"].enhance(["db:load_app"]) rescue nil
 
 task :seed do
   puts "Seeding database..."
