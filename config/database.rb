@@ -1,6 +1,6 @@
 require 'active_record'
 
-if ENV['DATABASE_URL']
+if ENV['DATABASE_URL'] && !ENV['DATABASE_URL'].empty?
   ActiveRecord::Base.establish_connection(ENV['DATABASE_URL'])
 else
   db_config = {
