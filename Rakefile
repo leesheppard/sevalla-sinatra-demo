@@ -1,62 +1,36 @@
+require 'active_record'
 require 'sinatra/activerecord/rake'
 require_relative './app'
+require 'active_record/tasks/database_tasks'
+
+db_config = if ENV['DATABASE_URL']
+              ENV['DATABASE_URL']
+            else
+              {
+                'adapter'  => 'postgresql',
+                'database' => ENV['DATABASE'] || 'sinatra_exports_dev',
+                'username' => ENV['DATABASE_USER'] || '',
+                'password' => ENV['DATABASE_PASSWORD'] || '',
+                'host'     => ENV['DATABASE_HOST'] || 'localhost',
+                'port'     => ENV['DATABASE_PORT'] || 5432
+              }
+            end
+
+ActiveRecord::Base.establish_connection(db_config)
+
+ActiveRecord::Tasks::DatabaseTasks.database_configuration = {
+  (ENV['RACK_ENV'] || 'development') => db_config
+}
+ActiveRecord::Tasks::DatabaseTasks.env = ENV['RACK_ENV'] || 'development'
+ActiveRecord::Tasks::DatabaseTasks.db_dir = 'db'
+ActiveRecord::Tasks::DatabaseTasks.migrations_paths = ['db/migrate']
 
 task :load_models do
   Dir["models/**/*.rb"].each { |f| require_relative f }
 end
 
-namespace :db do
-  desc "Create the database"
-  task :create do
-    config = ActiveRecord::Base.connection_config
-    adapter = config[:adapter]
-    database = config[:database]
-
-    case adapter
-    when 'postgresql'
-      system("createdb #{database}") unless system("psql -lqt | cut -d \\| -f 1 | grep -qw #{database}")
-    when 'sqlite3'
-      puts "SQLite3 database will be created automatically on first connection"
-    else
-      puts "DB adapter #{adapter} not supported by db:create task"
-    end
-  end
-
-  desc "Drop the database"
-  task :drop do
-    config = ActiveRecord::Base.connection_config
-    adapter = config[:adapter]
-    database = config[:database]
-
-    case adapter
-    when 'postgresql'
-      system("dropdb #{database}") if system("psql -lqt | cut -d \\| -f 1 | grep -qw #{database}")
-    when 'sqlite3'
-      File.delete(database) if File.exist?(database)
-    else
-      puts "DB adapter #{adapter} not supported by db:drop task"
-    end
-  end
-
-  desc "Migrate the database"
-  task :migrate do
-    ActiveRecord::MigrationContext.new('db/migrate', ActiveRecord::SchemaMigration).migrate
-  end
-
-  desc "Rollback the last migration"
-  task :rollback do
-    ActiveRecord::MigrationContext.new('db/migrate', ActiveRecord::SchemaMigration).rollback
-  end
-
-  desc "Reset the database (drop, create, migrate, seed)"
-  task :reset => [:drop, :create, :migrate, :seed] do
-    puts "Database reset complete!"
-  end
-end
-
 task :seed => :load_models do
   puts "Seeding database..."
-
   Order.delete_all
   User.delete_all
 
@@ -81,4 +55,15 @@ task :seed => :load_models do
   puts "✓ Created #{User.count} users"
   puts "✓ Created #{Order.count} orders"
   puts "Seeding complete!"
+end
+
+namespace :db do
+  desc "Reset the database (drop, create, migrate, seed)"
+  task :reset do
+    ActiveRecord::Tasks::DatabaseTasks.drop_current
+    ActiveRecord::Tasks::DatabaseTasks.create_current
+    Rake::Task['db:migrate'].invoke
+    Rake::Task[:seed].invoke
+    puts "Database reset complete!"
+  end
 end
