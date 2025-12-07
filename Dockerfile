@@ -29,5 +29,5 @@ RUN chmod +x bin/start.sh
 # Expose port
 EXPOSE 3000
 
-# Default command - use absolute path
-CMD ["/app/bin/start.sh"]
+# Default command
+CMD ["bin/start.sh"]
