@@ -1,12 +1,9 @@
-require 'active_record'
-
-class CreateOrders < ActiveRecord::Migration[6.1]
+class CreateOrders < ActiveRecord::Migration[8.1]
   def change
     create_table :orders do |t|
       t.references :user, null: false, foreign_key: true
-      t.string :product_name, null: false
-      t.integer :quantity, default: 1
-      t.decimal :price, precision: 10, scale: 2
+      t.decimal :amount, precision: 10, scale: 2, null: false
+      t.string :status, null: false
       t.timestamps
     end
   end
